@@ -4,7 +4,7 @@ services:
       context: .
       target: web
     ports:
-      - "8080:80"
+      - "${HOST_PORT:-8144}:80"
     depends_on:
       api:
         condition: service_healthy
@@ -18,7 +18,7 @@ services:
       NODE_ENV: production
       PORT: 3001
       DATABASE_URL: /data/tech-library.db
-      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:8080}
+      WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:8144}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:?Set ADMIN_PASSWORD_HASH}
       SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET}

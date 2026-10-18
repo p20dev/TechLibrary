@@ -3,11 +3,11 @@
 ## Deployment
 
 1. Generate an Argon2id hash with `npm run password:hash -w @tech-library/api -- "a strong password"`.
-2. Copy `.env.example` to `.env`, set the hash, a random 32+ character session secret, and the public `WEB_ORIGIN`.
+2. Copy `.env.example` to `.env`, set the hash, a random 32+ character session secret, `HOST_PORT` (default `8144`), and the matching public `WEB_ORIGIN`.
 3. Run `docker compose up -d --build`.
-4. Verify `http://host:8080/healthz` and the API health check through Docker Compose.
+4. Verify `http://host:8144/healthz` (or the configured `HOST_PORT`) and the API health check through Docker Compose.
 
-Terminate TLS at a trusted reverse proxy and forward HTTPS to port 8080. Restrict filesystem access to the Docker volume and secrets file.
+Terminate TLS at a trusted reverse proxy and forward HTTPS to the configured host port. Restrict filesystem access to the Docker volume and secrets file.
 
 ## Backup and restore
 
