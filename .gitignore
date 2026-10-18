@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.vite/
+coverage/
+data/
+*.db
+*.db-shm
+*.db-wal
+.env
+.env.local
+backups/
+playwright-report/
+test-results/

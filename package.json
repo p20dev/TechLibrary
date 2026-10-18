@@ -1,0 +1,25 @@
+{
+  "name": "tech-library",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "concurrently -n api,web,worker -c blue,magenta,yellow \"npm:dev -w @tech-library/api\" \"npm:dev -w @tech-library/web\" \"npm:dev -w @tech-library/worker\"",
+    "build": "npm run build -w @tech-library/contracts && npm run build -w @tech-library/database && npm run build -w @tech-library/api && npm run build -w @tech-library/worker && npm run build -w @tech-library/web",
+    "test": "npm run build -w @tech-library/contracts && npm run build -w @tech-library/database && npm run test --workspaces --if-present",
+    "typecheck": "npm run build -w @tech-library/contracts && npm run build -w @tech-library/database && npm run typecheck --workspaces --if-present",
+    "db:migrate": "npm run db:migrate -w @tech-library/database",
+    "db:seed": "npm run db:seed -w @tech-library/database",
+    "format": "prettier --write .",
+    "check": "npm run typecheck && npm test && npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "concurrently": "^9.2.1",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2",
+    "vitest": "^5.0.5"
+  },
+  "engines": { "node": ">=22" }
+}
