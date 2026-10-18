@@ -9,6 +9,7 @@ Tech Library is a modular, source-backed reference for modern web, app, and syst
 - immutable revisions, publication pointers, rollback, and claim-level provenance
 - integrated editorial workspace with secure session and CSRF protection
 - Danish/English UI and content selection without translating source code or established technical terms
+- dark-first discovery interface built from local shadcn/ui primitives and Radix accessibility foundations
 - simple reader registration/login with private topic favorites
 - idempotent monitoring of official sources with a daily scheduler and manual trigger
 - installable React/Vite PWA, Fastify API, SQLite/Drizzle data layer, and independent worker
@@ -44,7 +45,7 @@ The Compose stack listens on host port `8000` by default. Copy `.env.example` to
 ## Repository structure
 
 ```text
-apps/web       React, Vite, Radix UI, TanStack Query, Zustand, PWA
+apps/web       React, Vite, shadcn/ui + Radix, TanStack Query, Zustand, PWA
 apps/api       Fastify REST API, editorial policy, authentication
 apps/worker    Official-source monitoring and structured findings
 packages/contracts  Shared Zod schemas and public TypeScript types

@@ -11,7 +11,7 @@ React/Vite PWA ──REST──> Fastify API ──> SQLite
 
 ## Boundaries
 
-- `apps/web` owns Danish presentation, routing, query caching, and local UI state.
+- `apps/web` owns bilingual presentation, routing, query caching, and local UI state. Its component boundary uses local shadcn/ui primitives over Radix; feature modules do not depend directly on styling implementation details.
 - `apps/api` owns authentication, authorization, publication rules, and versioned REST resources.
 - `apps/worker` owns official-source collection, normalization, fingerprinting, and findings.
 - `packages/contracts` owns runtime validation and shared public types.
