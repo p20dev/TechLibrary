@@ -1,6 +1,6 @@
 # Tech Library
 
-Tech Library is a modular, source-backed reference for modern web, app, and systems development. The Danish PWA serves layered English technical entries for readers at every experience level. Official-source monitoring proposes changes; a human editor always reviews them before publication.
+Tech Library is a modular, source-backed reference for modern web, app, and systems development. English entries are the canonical source texts; Danish and future languages are revision-bound translations with explicit English fallback. Official-source monitoring proposes changes; a human editor always reviews them before publication.
 
 ## Included
 
@@ -8,6 +8,8 @@ Tech Library is a modular, source-backed reference for modern web, app, and syst
 - faceted browsing and SQLite FTS5 search
 - immutable revisions, publication pointers, rollback, and claim-level provenance
 - integrated editorial workspace with secure session and CSRF protection
+- Danish/English UI and content selection without translating source code or established technical terms
+- simple reader registration/login with private topic favorites
 - idempotent monitoring of official sources with a daily scheduler and manual trigger
 - installable React/Vite PWA, Fastify API, SQLite/Drizzle data layer, and independent worker
 - Docker Compose deployment, health checks, persistent data, backup and restore guidance

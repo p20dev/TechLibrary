@@ -11,6 +11,7 @@ import './styles.css';
 const router = createBrowserRouter([{ path: '/', element: <AppLayout />, children: [
   { index: true, element: <LibraryPage /> },
   { path: 'emne/:slug', element: <TopicPage /> },
+  { path: 'favoritter', element: <LibraryPage favoritesOnly /> },
   { path: 'admin', element: <AdminPage /> }
 ]}]);
 const client = new QueryClient({ defaultOptions: { queries: { staleTime: 60_000, retry: 1 } } });

@@ -19,6 +19,8 @@ React/Vite PWA ──REST──> Fastify API ──> SQLite
 
 Published revisions are immutable. `topics.active_revision_id` is the only publication pointer, so rollback does not rewrite history. Findings and draft revisions never become public merely because a worker produced them.
 
+English revision payloads are canonical. Each localized payload references the exact English source revision it translates; missing translations fall back to English rather than blocking publication. Reader accounts and favorites are separate from the editorial administrator and never affect public content.
+
 ## ADR-001: SQLite and one writer host
 
 SQLite is authoritative for v1 and runs on a persistent local volume. WAL mode supports concurrent readers while API and worker serialize short writes. Do not place the database on a network filesystem. Database access stays behind the database package and repository layer to preserve a future migration path.
