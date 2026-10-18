@@ -25,4 +25,16 @@ describe('API', () => {
     expect(login.json().csrfToken).toBeTruthy();
     await app.close();
   });
+
+  it('registers a reader and stores private favorites', async () => {
+    const app = await buildApp({ sqlite: context.sqlite, sessionSecret: 'a-secret-with-at-least-thirty-two-characters' });
+    const register = await app.inject({ method: 'POST', url: '/api/v1/auth/register', payload: { username: 'reader_one', password: 'correct horse' } });
+    expect(register.statusCode).toBe(200);
+    const cookie = register.cookies.find((item) => item.name === 'tech_library_user')!;
+    const favorite = await app.inject({ method: 'PUT', url: '/api/v1/favorites/typescript', headers: { cookie: `${cookie.name}=${cookie.value}`, 'x-csrf-token': register.json().csrfToken } });
+    expect(favorite.statusCode).toBe(200);
+    const list = await app.inject({ method: 'GET', url: '/api/v1/favorites?lang=da', headers: { cookie: `${cookie.name}=${cookie.value}` } });
+    expect(list.json()[0]).toMatchObject({ slug: 'typescript', language: 'da', isFavorite: true });
+    await app.close();
+  });
 });
