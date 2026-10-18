@@ -9,6 +9,7 @@ const json = async <T>(pending: Response | Promise<Response>): Promise<T> => {
 export const api = {
   topics: (params: URLSearchParams) => json<Paginated<TopicListItem>>(fetch(`/api/v1/topics?${params}`)),
   topic: (slug: string) => json<TopicDetail>(fetch(`/api/v1/topics/${slug}`)),
+  revisions: (slug: string) => json<Array<{ id: string; number: number; status: string; changeNote: string; createdAt: string; active: number }>>(fetch(`/api/v1/topics/${slug}/revisions`)),
   facets: () => json<{ domains: Array<{ value: string; count: number }>; types: Array<{ value: string; count: number }> }>(fetch('/api/v1/facets')),
   login: (username: string, password: string) => json<{ csrfToken: string }>(fetch('/api/v1/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, credentials: 'include', body: JSON.stringify({ username, password }) })),
   session: () => json<{ csrfToken: string }>(fetch('/api/v1/admin/session', { credentials: 'include' })),
