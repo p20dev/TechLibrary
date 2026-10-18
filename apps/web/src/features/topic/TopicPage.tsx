@@ -17,7 +17,7 @@ export function TopicPage() {
     <Link className="back-link" to="/"><ArrowLeft size={16}/>{t.library}</Link>
     <header className="topic-hero">
       <div><div className="eyebrow"><span></span>{topic.domains.join(' · ')}</div><h1>{topic.title}</h1><p>{topic.summary}</p>{session.data ? <button className={`favorite-button ${topic.isFavorite ? 'active' : ''}`} onClick={() => favorite.mutate()}><Heart/>{topic.isFavorite ? t.unfavorite : t.favorite}</button> : <p className="login-hint">{t.loginHint}</p>}</div>
-      <dl><div><dt>Type</dt><dd>{topic.type}</dd></div><div><dt>Version</dt><dd>{topic.currentVersion ?? 'Living standard'}</dd></div><div><dt>Revision</dt><dd>#{topic.revisionNumber}</dd></div><div><dt>Verificeret</dt><dd>{new Date(topic.verifiedAt).toLocaleDateString('da-DK')}</dd></div></dl>
+      <dl><div><dt>{t.type}</dt><dd>{topic.type}</dd></div><div><dt>{t.version}</dt><dd>{topic.currentVersion ?? 'Living standard'}</dd></div><div><dt>{t.revision}</dt><dd>#{topic.revisionNumber}</dd></div><div><dt>{t.verified}</dt><dd>{new Date(topic.verifiedAt).toLocaleDateString(language === 'da' ? 'da-DK' : 'en-GB')}</dd></div></dl>
     </header>
     <Tabs.Root defaultValue="overview" className="topic-tabs">
       <Tabs.List aria-label="Content level"><Tabs.Trigger value="overview">{t.overview}</Tabs.Trigger><Tabs.Trigger value="deep">{t.depth}</Tabs.Trigger><Tabs.Trigger value="sources">{t.sources} <span>{topic.sources.length}</span></Tabs.Trigger></Tabs.List>
