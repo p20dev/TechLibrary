@@ -37,7 +37,7 @@ Open `http://localhost:5173`. The API runs on port 3001. Local content is stored
 | `npm run db:seed` | Add the curated starter catalog |
 | `docker compose up -d --build` | Build and run the production topology |
 
-The Compose stack listens on host port `8144` by default. Copy `.env.example` to `.env` and change `HOST_PORT` plus `WEB_ORIGIN` when another port or public origin is required.
+The Compose stack listens on host port `8000` by default. Copy `.env.example` to `.env` and change `HOST_PORT` plus `WEB_ORIGIN` when another port or public origin is required.
 
 ## Repository structure
 
