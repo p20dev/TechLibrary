@@ -1,35 +1,36 @@
 import { randomUUID } from 'node:crypto';
 import type Database from 'better-sqlite3';
-import { topicRevisionInputSchema, type TopicDetail, type TopicListItem, type TopicRevisionInput } from '@tech-library/contracts';
+import { topicRevisionInputSchema, type Language, type TopicDetail, type TopicListItem, type TopicRevisionInput } from '@tech-library/contracts';
 
 const parse = <T>(value: string): T => JSON.parse(value) as T;
 
 export class LibraryRepository {
   constructor(private readonly db: Database.Database) {}
 
-  listTopics({ q = '', domain, type, page = 1, pageSize = 24 }: { q?: string; domain?: string; type?: string; page?: number; pageSize?: number }) {
+  listTopics({ q = '', domain, type, page = 1, pageSize = 24, language = 'en', userId }: { q?: string; domain?: string; type?: string; page?: number; pageSize?: number; language?: Language; userId?: string }) {
     const params: unknown[] = [];
     let where = 'WHERE t.active_revision_id IS NOT NULL';
-    if (q) { where += ' AND t.id IN (SELECT topic_id FROM topic_search WHERE topic_search MATCH ?)'; params.push(q.replace(/["']/g, '')); }
-    if (domain) { where += " AND json_extract(r.payload, '$.domains') LIKE ?"; params.push(`%${domain}%`); }
-    if (type) { where += " AND json_extract(r.payload, '$.type') = ?"; params.push(type); }
-    const base = `FROM topics t JOIN revisions r ON r.id = t.active_revision_id ${where}`;
-    const total = Number((this.db.prepare(`SELECT count(*) AS count ${base}`).get(...params) as { count: number }).count);
-    const rows = this.db.prepare(`SELECT t.id, t.slug, r.payload, COALESCE(r.published_at, r.reviewed_at, r.created_at) verified_at ${base} ORDER BY json_extract(r.payload, '$.title') LIMIT ? OFFSET ?`).all(...params, pageSize, (page - 1) * pageSize) as Array<Record<string, string>>;
-    return { items: rows.map(toListItem), total, page, pageSize };
+    const localized = "CASE WHEN ?='en' THEN r.payload ELSE COALESCE(tr.payload,r.payload) END";
+    if (q) { where += ` AND (${localized} LIKE ? OR t.id IN (SELECT topic_id FROM topic_search WHERE topic_search MATCH ?))`; params.push(language, `%${q}%`, q.replace(/["']/g, '')); }
+    if (domain) { where += ` AND json_extract(${localized}, '$.domains') LIKE ?`; params.push(language, `%${domain}%`); }
+    if (type) { where += ` AND json_extract(${localized}, '$.type') = ?`; params.push(language, type); }
+    const joins = `FROM topics t JOIN revisions r ON r.id = t.active_revision_id LEFT JOIN topic_translations tr ON tr.revision_id=r.id AND tr.language='da'`;
+    const total = Number((this.db.prepare(`SELECT count(*) AS count ${joins} ${where}`).get(...params) as { count: number }).count);
+    const rows = this.db.prepare(`SELECT t.id, t.slug, ${localized} payload, tr.id translation_id, COALESCE(r.published_at, r.reviewed_at, r.created_at) verified_at, CASE WHEN f.user_id IS NULL THEN 0 ELSE 1 END is_favorite ${joins} LEFT JOIN favorites f ON f.topic_id=t.id AND f.user_id=? ${where} ORDER BY json_extract(${localized}, '$.title') LIMIT ? OFFSET ?`).all(language, userId ?? '', ...params, language, pageSize, (page - 1) * pageSize) as Array<Record<string, string>>;
+    return { items: rows.map((row) => toListItem(row, language)), total, page, pageSize };
   }
 
-  getTopic(slug: string): TopicDetail | null {
-    const row = this.db.prepare(`SELECT t.id, t.slug, r.id revision_id, r.number, r.payload, COALESCE(r.published_at, r.reviewed_at, r.created_at) verified_at FROM topics t JOIN revisions r ON r.id = t.active_revision_id WHERE t.slug = ?`).get(slug) as Record<string, string | number> | undefined;
+  getTopic(slug: string, language: Language = 'en', userId?: string): TopicDetail | null {
+    const row = this.db.prepare(`SELECT t.id, t.slug, r.id revision_id, r.number, CASE WHEN ?='en' THEN r.payload ELSE COALESCE(tr.payload,r.payload) END payload, tr.id translation_id, CASE WHEN f.user_id IS NULL THEN 0 ELSE 1 END is_favorite, COALESCE(r.published_at, r.reviewed_at, r.created_at) verified_at FROM topics t JOIN revisions r ON r.id = t.active_revision_id LEFT JOIN topic_translations tr ON tr.revision_id=r.id AND tr.language=? LEFT JOIN favorites f ON f.topic_id=t.id AND f.user_id=? WHERE t.slug = ?`).get(language, language, userId ?? '', slug) as Record<string, string | number> | undefined;
     if (!row) return null;
-    const item = toListItem(row as Record<string, string>);
+    const item = toListItem(row as Record<string, string>, language);
     const data = parse<TopicRevisionInput>(String(row.payload));
     const sourceRows = this.db.prepare(`SELECT s.* FROM sources s JOIN revision_sources rs ON rs.source_id=s.id WHERE rs.revision_id=? ORDER BY s.verified_at DESC`).all(row.revision_id) as Array<Record<string, string>>;
     const relationRows = this.db.prepare(`SELECT rel.type, t.id, t.slug, r.payload, COALESCE(r.published_at,r.created_at) verified_at FROM relations rel JOIN topics t ON t.id=rel.target_topic_id JOIN revisions r ON r.id=t.active_revision_id WHERE rel.source_topic_id=?`).all(row.id) as Array<Record<string, string>>;
     return {
       ...item, aliases: data.aliases, audience: data.audience, supportedVersions: data.supportedVersions,
       content: data.content, revisionId: String(row.revision_id), revisionNumber: Number(row.number),
-      relations: relationRows.map((relation) => ({ type: relation.type as TopicDetail['relations'][number]['type'], topic: toListItem(relation) })),
+      relations: relationRows.map((relation) => ({ type: relation.type as TopicDetail['relations'][number]['type'], topic: toListItem(relation, 'en') })),
       sources: sourceRows.map((source) => ({ id: source.id!, title: source.title!, url: source.url!, publisher: source.publisher!, type: source.source_type as TopicDetail['sources'][number]['type'], verifiedAt: source.verified_at!, claims: parse(source.claims!) }))
     };
   }
@@ -116,9 +117,9 @@ export class LibraryRepository {
   }
 }
 
-function toListItem(row: Record<string, string>): TopicListItem {
+function toListItem(row: Record<string, string>, language: Language): TopicListItem {
   const data = parse<TopicRevisionInput>(row.payload!);
-  return { id: row.id!, slug: row.slug!, title: data.title, summary: data.summary, type: data.type, domains: data.domains, tags: data.tags, currentVersion: data.currentVersion, verifiedAt: row.verified_at! };
+  return { id: row.id!, slug: row.slug!, title: data.title, summary: data.summary, type: data.type, domains: data.domains, tags: data.tags, currentVersion: data.currentVersion, verifiedAt: row.verified_at!, language: row.translation_id || language === 'en' ? language : 'en', sourceLanguage: 'en', translationFallback: language !== 'en' && !row.translation_id, isFavorite: Boolean(Number(row.is_favorite ?? 0)) };
 }
 
 function countValues(values: string[]) {

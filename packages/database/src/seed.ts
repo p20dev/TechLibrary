@@ -68,6 +68,7 @@ export function seedDatabase(sqlite: Database.Database): number {
   const insertSource = sqlite.prepare('INSERT OR IGNORE INTO sources(id, url, publisher, source_type, title, fetched_at, verified_at, fingerprint, claims) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
   const linkSource = sqlite.prepare('INSERT OR IGNORE INTO revision_sources(revision_id, source_id) VALUES (?, ?)');
   const indexSearch = sqlite.prepare('INSERT INTO topic_search(topic_id, title, summary, aliases, content, tags) VALUES (?, ?, ?, ?, ?, ?)');
+  const insertTranslation = sqlite.prepare('INSERT OR IGNORE INTO topic_translations(id,revision_id,language,payload,source_revision_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?)');
   const countBefore = Number((sqlite.prepare('SELECT count(*) AS count FROM topics').get() as { count: number }).count);
 
   sqlite.transaction(() => {
@@ -80,6 +81,7 @@ export function seedDatabase(sqlite: Database.Database): number {
       insertRevision.run(revisionId, topicId, 'approved', JSON.stringify(data), data.changeNote, now, now, now);
       insertSource.run(sourceId, item.url, item.publisher, 'documentation', `${item.title} official documentation`, now, now, createHash('sha256').update(item.url).digest('hex'), JSON.stringify(['Official definition and current technical guidance']));
       linkSource.run(revisionId, sourceId);
+      insertTranslation.run(`translation_${item.slug}_da`, revisionId, 'da', JSON.stringify(danishPayload(data, item)), revisionId, now, now);
       if (!(sqlite.prepare('SELECT 1 FROM topic_search WHERE topic_id = ?').get(topicId))) {
         indexSearch.run(topicId, data.title, data.summary, data.aliases.join(' '), JSON.stringify(data.content), data.tags.join(' '));
       }
@@ -88,4 +90,25 @@ export function seedDatabase(sqlite: Database.Database): number {
   })();
   const countAfter = Number((sqlite.prepare('SELECT count(*) AS count FROM topics').get() as { count: number }).count);
   return countAfter - countBefore;
+}
+
+function danishPayload(source: TopicRevisionInput, topic: SeedTopic): TopicRevisionInput {
+  const domain = ({ 'Web platform': 'Webplatform', 'Frontend and UI': 'Frontend og UI', 'Backend and APIs': 'Backend og API’er', Data: 'Data', 'Mobile and desktop': 'Mobil og desktop', 'DevOps and cloud': 'DevOps og cloud', 'Testing and observability': 'Test og observability', 'Security and privacy': 'Sikkerhed og privacy' } as Record<string, string>)[topic.domain] ?? topic.domain;
+  return {
+    ...source, domains: [domain],
+    summary: `${topic.title} er et centralt emne inden for ${domain.toLowerCase()}, med fokus på praktisk anvendelse, kompatibilitet og dokumenterede tekniske valg.`,
+    content: {
+      ...source.content,
+      introduction: `${topic.title} er en vigtig del af moderne softwareudvikling. Opslaget giver et praktisk overblik over teknologien, dens trade-offs og dens officielle kilder.`,
+      concepts: ['Kernemodel og terminologi', 'Økosystem og interoperabilitet', 'Livscyklus og vedligeholdelse'],
+      useCases: [`Vurdér ${topic.title} til nye og eksisterende systemer`, 'Forstå integrationsgrænser og driftsmæssig påvirkning'],
+      benefits: ['Underbygget af en officiel, sporbar primærkilde', 'Præsenteret i lag til læsere med forskellig erfaring'],
+      limitations: ['Præcise muligheder og support varierer efter version og platform'],
+      avoidWhen: ['Driftsomkostninger eller kompatibilitetskrav overstiger værdien for projektet'],
+      compatibility: 'Se den officielle dokumentation for aktuel platform- og versionskompatibilitet.',
+      requirements: ['Kontrollér understøttede versioner før anvendelse', 'Test i det planlagte produktionsmiljø'],
+      securityNotes: ['Gennemgå officiel sikkerhedsvejledning og supportpolitik før produktionsbrug.']
+    },
+    changeNote: 'Første dansk oversættelse baseret på den engelske kilderevision'
+  };
 }

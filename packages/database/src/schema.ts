@@ -98,3 +98,34 @@ export const workerJobs = sqliteTable('worker_jobs', {
   completedAt: text('completed_at'),
   result: text('result', { mode: 'json' })
 });
+
+export const topicTranslations = sqliteTable('topic_translations', {
+  id: text('id').primaryKey(),
+  revisionId: text('revision_id').notNull().references(() => revisions.id),
+  language: text('language').notNull(),
+  payload: text('payload', { mode: 'json' }).notNull(),
+  sourceRevisionId: text('source_revision_id').notNull().references(() => revisions.id),
+  createdAt: text('created_at').notNull(),
+  updatedAt: text('updated_at').notNull()
+}, (table) => [uniqueIndex('translation_revision_language').on(table.revisionId, table.language)]);
+
+export const users = sqliteTable('users', {
+  id: text('id').primaryKey(),
+  username: text('username').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  createdAt: text('created_at').notNull()
+});
+
+export const userSessions = sqliteTable('user_sessions', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id),
+  csrfToken: text('csrf_token').notNull(),
+  expiresAt: text('expires_at').notNull(),
+  createdAt: text('created_at').notNull()
+});
+
+export const favorites = sqliteTable('favorites', {
+  userId: text('user_id').notNull().references(() => users.id),
+  topicId: text('topic_id').notNull().references(() => topics.id),
+  createdAt: text('created_at').notNull()
+}, (table) => [uniqueIndex('favorite_user_topic').on(table.userId, table.topicId)]);

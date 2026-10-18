@@ -15,7 +15,13 @@ const migrations = [
    CREATE VIRTUAL TABLE IF NOT EXISTS topic_search USING fts5(topic_id UNINDEXED, title, summary, aliases, content, tags, tokenize='porter unicode61');
    CREATE INDEX IF NOT EXISTS revisions_topic_id ON revisions(topic_id);
    CREATE INDEX IF NOT EXISTS findings_status ON findings(status);
-   CREATE INDEX IF NOT EXISTS relations_source ON relations(source_topic_id);`
+   CREATE INDEX IF NOT EXISTS relations_source ON relations(source_topic_id);`,
+  `CREATE TABLE IF NOT EXISTS topic_translations (id TEXT PRIMARY KEY, revision_id TEXT NOT NULL REFERENCES revisions(id), language TEXT NOT NULL, payload TEXT NOT NULL, source_revision_id TEXT NOT NULL REFERENCES revisions(id), created_at TEXT NOT NULL, updated_at TEXT NOT NULL, UNIQUE(revision_id, language));
+   CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE COLLATE NOCASE, password_hash TEXT NOT NULL, created_at TEXT NOT NULL);
+   CREATE TABLE IF NOT EXISTS user_sessions (id TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, csrf_token TEXT NOT NULL, expires_at TEXT NOT NULL, created_at TEXT NOT NULL);
+   CREATE TABLE IF NOT EXISTS favorites (user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE, topic_id TEXT NOT NULL REFERENCES topics(id) ON DELETE CASCADE, created_at TEXT NOT NULL, PRIMARY KEY(user_id, topic_id));
+   CREATE INDEX IF NOT EXISTS user_sessions_user ON user_sessions(user_id);
+   CREATE INDEX IF NOT EXISTS favorites_user ON favorites(user_id);`
 ];
 
 export function migrate(sqlite: Database.Database): void {

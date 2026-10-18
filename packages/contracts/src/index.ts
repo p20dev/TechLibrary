@@ -39,6 +39,8 @@ export type TopicSection = z.infer<typeof topicSectionSchema>;
 export type TopicType = (typeof topicTypes)[number];
 export type RelationType = (typeof relationTypes)[number];
 export type SourceType = (typeof sourceTypes)[number];
+export const languages = ['en', 'da'] as const;
+export type Language = (typeof languages)[number];
 
 export interface TopicListItem {
   id: string;
@@ -50,6 +52,10 @@ export interface TopicListItem {
   tags: string[];
   currentVersion: string | null;
   verifiedAt: string;
+  language: Language;
+  sourceLanguage: 'en';
+  translationFallback: boolean;
+  isFavorite?: boolean;
 }
 
 export interface TopicDetail extends TopicListItem {
