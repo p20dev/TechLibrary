@@ -1,0 +1,1 @@
+{"root":["./src/main.tsx","./src/features/admin/adminpage.tsx","./src/features/library/librarypage.test.tsx","./src/features/library/librarypage.tsx","./src/features/topic/topicpage.tsx","./src/lib/api.ts","./src/store/ui.ts","./src/test/setup.ts","./src/ui/applayout.tsx"],"version":"5.9.3"}
