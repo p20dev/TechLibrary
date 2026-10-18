@@ -21,6 +21,7 @@ COPY --from=build /app/packages/contracts/dist ./packages/contracts/dist
 COPY --from=build /app/packages/contracts/package.json ./packages/contracts/package.json
 COPY --from=build /app/packages/database/dist ./packages/database/dist
 COPY --from=build /app/packages/database/package.json ./packages/database/package.json
+RUN mkdir -p /data && chown node:node /data
 USER node
 CMD ["node", "apps/api/dist/server.js"]
 
