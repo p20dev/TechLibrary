@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { BookOpen, Compass, Github, Heart, LogIn, LogOut, ShieldCheck, UserRound } from 'lucide-react';
-import { useState } from 'react';
+import { BookOpen, Compass, Github, Heart, LogIn, LogOut, Moon, ShieldCheck, Sun, UserRound } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { userApi } from '../lib/api';
 import { usePreferences, useText } from '../store/preferences';
@@ -9,14 +9,19 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } 
 import { Input } from './components/input';
 
 export function AppLayout() {
-  const { language, t } = useText(); const setLanguage = usePreferences((state) => state.setLanguage); const client = useQueryClient();
+  const { language, t } = useText(); const { theme, setLanguage, setTheme } = usePreferences(); const client = useQueryClient();
+  useEffect(() => { document.documentElement.dataset.theme = theme; document.documentElement.style.colorScheme = theme; }, [theme]);
   const session = useQuery({ queryKey: ['user-session'], queryFn: userApi.me, retry: false });
   const logout = useMutation({ mutationFn: () => userApi.logout(session.data!.csrfToken), onSuccess: () => { client.setQueryData(['user-session'], null); client.invalidateQueries({ queryKey: ['topics'] }); } });
   return <div className="app-shell"><aside className="sidebar">
     <Link className="brand" to="/"><span className="brand-mark"><BookOpen/></span><span>Tech Library</span></Link>
     <nav aria-label="Primary navigation"><NavLink to="/" end><Compass/>{t.library}</NavLink>{session.data && <NavLink to="/favoritter"><Heart/>{t.favorites}</NavLink>}<NavLink to="/admin"><ShieldCheck/>{t.editorial}</NavLink></nav>
-    <div className="sidebar-bottom"><div className="language-switch"><button className={language === 'da' ? 'active' : ''} onClick={() => setLanguage('da')}>DA</button><button className={language === 'en' ? 'active' : ''} onClick={() => setLanguage('en')}>EN</button></div>{session.data ? <Button variant="ghost" className="account-button" onClick={() => logout.mutate()} title={t.logout}><LogOut/><span>{session.data.username}</span></Button> : <AccountDialog/>}<a className="source-link" href="https://git.p20.dev/christian/TechLibrary" target="_blank" rel="noreferrer"><Github/>Source</a></div>
-  </aside><header className="mobile-topbar"><Link className="brand" to="/"><span className="brand-mark"><BookOpen/></span><span>Tech Library</span></Link><nav>{/* Mobile navigation stays deliberately compact. */}<NavLink to="/"><Compass/></NavLink><NavLink to="/admin"><ShieldCheck/></NavLink></nav></header><main className="app-main"><Outlet/></main></div>;
+    <div className="sidebar-bottom"><ThemeToggle theme={theme} label={theme === 'dark' ? t.lightMode : t.darkMode} onToggle={() => setTheme(theme === 'dark' ? 'light' : 'dark')}/><div className="language-switch"><button className={language === 'da' ? 'active' : ''} onClick={() => setLanguage('da')}>DA</button><button className={language === 'en' ? 'active' : ''} onClick={() => setLanguage('en')}>EN</button></div>{session.data ? <Button variant="ghost" className="account-button" onClick={() => logout.mutate()} title={t.logout}><LogOut/><span>{session.data.username}</span></Button> : <AccountDialog/>}<a className="source-link" href="https://git.p20.dev/christian/TechLibrary" target="_blank" rel="noreferrer"><Github/>Source</a></div>
+  </aside><header className="mobile-topbar"><Link className="brand" to="/"><span className="brand-mark"><BookOpen/></span><span>Tech Library</span></Link><nav>{/* Mobile navigation stays deliberately compact. */}<ThemeToggle theme={theme} label={theme === 'dark' ? t.lightMode : t.darkMode} onToggle={() => setTheme(theme === 'dark' ? 'light' : 'dark')}/><NavLink to="/"><Compass/></NavLink><NavLink to="/admin"><ShieldCheck/></NavLink></nav></header><main className="app-main"><Outlet/></main></div>;
+}
+
+function ThemeToggle({ theme, label, onToggle }: { theme: 'dark' | 'light'; label: string; onToggle(): void }) {
+  return <Button variant="ghost" className="theme-toggle" onClick={onToggle} aria-label={label} title={label}>{theme === 'dark' ? <Sun/> : <Moon/>}<span>{theme === 'dark' ? 'Light' : 'Dark'}</span></Button>;
 }
 
 function AccountDialog() {

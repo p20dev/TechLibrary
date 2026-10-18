@@ -8,6 +8,16 @@ import { TopicPage } from './features/topic/TopicPage';
 import { AdminPage } from './features/admin/AdminPage';
 import './styles.css';
 
+// Apply the persisted theme before React mounts to avoid a bright/dark flash on navigation.
+try {
+  const stored = JSON.parse(localStorage.getItem('tech-library-preferences') ?? '{}') as { state?: { theme?: 'dark' | 'light' } };
+  const theme = stored.state?.theme ?? 'dark';
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+} catch {
+  document.documentElement.dataset.theme = 'dark';
+}
+
 const router = createBrowserRouter([{ path: '/', element: <AppLayout />, children: [
   { index: true, element: <LibraryPage /> },
   { path: 'emne/:slug', element: <TopicPage /> },
